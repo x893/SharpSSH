@@ -78,7 +78,7 @@ namespace SharpSsh.jsch
 				}
 				m_socket.setTcpNoDelay(true);
 
-				m_outs.Write(new StringEx("CONNECT " + host + ":" + port + " HTTP/1.0\r\n").getBytes());
+				m_outs.Write("CONNECT " + host + ":" + port + " HTTP/1.0\r\n");
 
 				if (m_user != null && m_passwd != null)
 				{

@@ -1,12 +1,11 @@
 using System;
 using SharpSsh.java.lang;
-using Str = SharpSsh.java.StringEx;
 
 namespace SharpSsh.jsch
 {
 	public class ChannelSession : Channel
 	{
-		private static byte[] _session = new Str("session").getBytes();
+		private static byte[] _session = Util.getBytesUTF8("session");
 		public ChannelSession()
 			: base()
 		{
@@ -31,13 +30,15 @@ namespace SharpSsh.jsch
 									buf.m_buffer.Length - 14
 									- 32 - 20 // padding and mac
 									);
-					if (i == 0) continue;
+					if (i == 0)
+						continue;
 					if (i == -1)
 					{
 						eof();
 						break;
 					}
-					if (m_close) break;
+					if (m_close)
+						break;
 					packet.reset();
 					buf.putByte((byte)Session.SSH_MSG_CHANNEL_DATA);
 					buf.putInt(m_recipient);

@@ -56,7 +56,7 @@ namespace SharpSsh.jsch
         internal const int SSH_MSG_CHANNEL_FAILURE = 100;
 
         private byte[] m_server_version;                            // server version
-        private byte[] m_client_version = StringEx.getBytes("SSH-2.0-" + m_version);  // client version
+        private byte[] m_client_version = Util.getBytesUTF8("SSH-2.0-" + m_version);  // client version
 
         private byte[] m_I_C; // the payload of the client's SSH_MSG_KEXINIT
         private byte[] m_I_S; // the payload of the server's SSH_MSG_KEXINIT
@@ -108,7 +108,7 @@ namespace SharpSsh.jsch
         IRunnable m_thread;
         private GlobalRequestReply m_grr = new GlobalRequestReply();
         private bool m_in_kex = false;
-        private static byte[] m_keepalivemsg = StringEx.getBytes("keepalive@jcraft.com");
+        private static byte[] m_keepalivemsg = Util.getBytesUTF8("keepalive@jcraft.com");
         private HostKey m_hostkey = null;
 
         internal Session(JSch jsch)
@@ -346,7 +346,7 @@ namespace SharpSsh.jsch
                             }
                             catch (Exception ee)
                             {
-                                System.Console.WriteLine("ee: " + ee); // SSH_MSG_DISCONNECT: 2 Too many authentication failures
+                                Console.WriteLine("ee: " + ee); // SSH_MSG_DISCONNECT: 2 Too many authentication failures
                             }
                         }
 
@@ -386,8 +386,8 @@ namespace SharpSsh.jsch
                         m_packet.reset();
                         m_buf.putByte((byte)SSH_MSG_DISCONNECT);
                         m_buf.putInt(3);
-                        m_buf.putString(StringEx.getBytes(e.ToString()));
-                        m_buf.putString(StringEx.getBytes("en"));
+                        m_buf.putString(e.ToString());
+                        m_buf.putString("en");
                         write(m_packet);
                         disconnect();
                     }
@@ -436,7 +436,7 @@ namespace SharpSsh.jsch
             }
             catch (Exception e)
             {
-                System.Console.Error.WriteLine("kex: " + e);
+                Console.Error.WriteLine("kex: " + e);
             }
             kex.m_guess = guess;
             kex.init(this, m_server_version, m_client_version, m_I_S, m_I_C);
@@ -592,7 +592,7 @@ namespace SharpSsh.jsch
             }
             catch (Exception e)
             {
-                System.Console.WriteLine(e);
+                Console.WriteLine(e);
             }
             return null;
         }
@@ -678,7 +678,7 @@ namespace SharpSsh.jsch
                     }
                     else
                     {
-                        System.Console.Error.WriteLine("fail in inflater");
+                        Console.Error.WriteLine("fail in inflater");
                         break;
                     }
                 }
@@ -693,8 +693,8 @@ namespace SharpSsh.jsch
                     byte[] language_tag = buf.getString();
                     throw new JSchException("SSH_MSG_DISCONNECT:" +
                         " " + reason_code +
-                        " " + StringEx.getString(description) +
-                        " " + StringEx.getString(language_tag));
+                        " " + Util.getStringUTF8(description) +
+						" " + Util.getStringUTF8(language_tag));
                 }
                 else if (type == SSH_MSG_IGNORE)
                 {
@@ -849,7 +849,7 @@ namespace SharpSsh.jsch
                         }
                         catch (Exception)
                         {
-                            System.Console.Error.WriteLine(foo + " isn't accessible.");
+                            Console.Error.WriteLine(foo + " isn't accessible.");
                         }
                     }
                 }
@@ -871,7 +871,7 @@ namespace SharpSsh.jsch
                         }
                         catch (Exception)
                         {
-                            System.Console.Error.WriteLine(foo + " isn't accessible.");
+                            Console.Error.WriteLine(foo + " isn't accessible.");
                         }
                     }
                 }
@@ -881,7 +881,7 @@ namespace SharpSsh.jsch
                         m_inflater = null;
                 }
             }
-            catch (Exception e) { System.Console.Error.WriteLine("updatekeys: " + e); }
+            catch (Exception e) { Console.Error.WriteLine("updatekeys: " + e); }
         }
 
         public void write(Packet packet, Channel c, int length)
@@ -1161,12 +1161,12 @@ namespace SharpSsh.jsch
                             if (channel != null)
                             {
                                 byte reply_type = (byte)SSH_MSG_CHANNEL_FAILURE;
-                                if ((new StringEx(foo)).equals("exit-status"))
-                                {
-                                    i = buf.getInt();             // exit-status
-                                    channel.ExitStatus = i;
-                                    reply_type = (byte)SSH_MSG_CHANNEL_SUCCESS;
-                                }
+								if (Util.getStringUTF8(foo) == "exit-status")
+								{
+									i = buf.getInt();             // exit-status
+									channel.ExitStatus = i;
+									reply_type = (byte)SSH_MSG_CHANNEL_SUCCESS;
+								}
                                 if (reply)
                                 {
                                     packet.reset();
@@ -1179,35 +1179,32 @@ namespace SharpSsh.jsch
                         case SSH_MSG_CHANNEL_OPEN:
                             buf.getInt();
                             buf.getShort();
-                            foo = buf.getString();
-                            StringEx ctyp = new StringEx(foo);
+                            string ctyp = Util.getStringUTF8(buf.getString());
 
-                            if (!new StringEx("forwarded-tcpip").equals(ctyp)
-                            && !(new StringEx("x11").equals(ctyp) && m_x11_forwarding)
-                                )
-                            {
-                                System.Console.WriteLine("Session.run: CHANNEL OPEN " + ctyp);
-                                throw new IOException("Session.run: CHANNEL OPEN " + ctyp);
-                            }
-                            else
-                            {
-                                channel = Channel.getChannel(ctyp);
-                                addChannel(channel);
-                                channel.getData(buf);
-                                channel.Init();
+							if ("forwarded-tcpip" != ctyp && !("x11" == ctyp && m_x11_forwarding))
+							{
+								Console.WriteLine("Session.run: CHANNEL OPEN " + ctyp);
+								throw new IOException("Session.run: CHANNEL OPEN " + ctyp);
+							}
+							else
+							{
+								channel = Channel.getChannel(ctyp);
+								addChannel(channel);
+								channel.getData(buf);
+								channel.Init();
 
-                                packet.reset();
-                                buf.putByte((byte)SSH_MSG_CHANNEL_OPEN_CONFIRMATION);
-                                buf.putInt(channel.Recipient);
-                                buf.putInt(channel.Id);
-                                buf.putInt(channel.LocalWindowSize);
-                                buf.putInt(channel.LocalPacketSize);
-                                write(packet);
-                                Thread tmp = new Thread(channel);
-                                tmp.Name = "Channel " + ctyp + " " + m_host;
-                                tmp.Start();
-                                break;
-                            }
+								packet.reset();
+								buf.putByte((byte)SSH_MSG_CHANNEL_OPEN_CONFIRMATION);
+								buf.putInt(channel.Recipient);
+								buf.putInt(channel.Id);
+								buf.putInt(channel.LocalWindowSize);
+								buf.putInt(channel.LocalPacketSize);
+								write(packet);
+								Thread tmp = new Thread(channel);
+								tmp.Name = "Channel " + ctyp + " " + m_host;
+								tmp.Start();
+								break;
+							}
                         case SSH_MSG_CHANNEL_SUCCESS:
                             buf.getInt();
                             buf.getShort();
@@ -1318,11 +1315,11 @@ namespace SharpSsh.jsch
             m_jsch.removeSession(this);
         }
 
-        public void setPortForwardingL(int lport, StringEx host, int rport)
+        public void setPortForwardingL(int lport, string host, int rport)
         {
             setPortForwardingL("127.0.0.1", lport, host, rport);
         }
-        public void setPortForwardingL(StringEx boundaddress, int lport, StringEx host, int rport)
+		public void setPortForwardingL(string boundaddress, int lport, string host, int rport)
         {
             setPortForwardingL(boundaddress, lport, host, rport, null);
         }
@@ -1392,9 +1389,9 @@ namespace SharpSsh.jsch
                 {
                     packet.reset();
                     buf.putByte((byte)SSH_MSG_GLOBAL_REQUEST);
-                    buf.putString(new StringEx("tcpip-forward").getBytes());
+                    buf.putString("tcpip-forward");
                     buf.putByte((byte)1);
-                    buf.putString(new StringEx("0.0.0.0").getBytes());
+                    buf.putString("0.0.0.0");
                     buf.putInt(rport);
                     write(packet);
                 }
@@ -1479,17 +1476,17 @@ namespace SharpSsh.jsch
                 throw new JSchException(e.ToString());
             }
         }
-        public StringEx getServerVersion()
+        public string getServerVersion()
         {
-            return new StringEx(m_server_version);
+            return Util.getStringUTF8(m_server_version);
         }
-        public StringEx getClientVersion()
+        public string getClientVersion()
         {
-            return new StringEx(m_client_version);
+            return Util.getStringUTF8(m_client_version);
         }
-        public void setClientVersion(StringEx cv)
+        public void setClientVersion(string cv)
         {
-            m_client_version = cv.getBytes();
+            m_client_version = Util.getBytesUTF8(cv);
         }
 
         public void sendIgnore()

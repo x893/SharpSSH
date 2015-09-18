@@ -1,5 +1,4 @@
 using System;
-using Str = SharpSsh.java.StringEx;
 
 namespace SharpSsh.jsch
 {
@@ -24,9 +23,9 @@ namespace SharpSsh.jsch
 			packet.reset();
 			buf.putByte((byte)Session.SSH_MSG_CHANNEL_REQUEST);
 			buf.putInt(channel.Recipient);
-			buf.putString(new Str("exec").getBytes());
+			buf.putString("exec");
 			buf.putByte((byte)(waitForReply() ? 1 : 0));
-			buf.putString(new Str(m_command).getBytes());
+			buf.putString(m_command);
 			session.write(packet);
 		}
 

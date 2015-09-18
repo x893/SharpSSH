@@ -1,3 +1,4 @@
+using SharpSsh.jsch;
 using System;
 using IO = System.IO;
 
@@ -56,7 +57,7 @@ namespace SharpSsh.java.io
 		}
 		public void Write(string msg)
 		{
-			Write(StringEx.getBytes(msg));
+			Write(Util.getBytesUTF8(msg));
 		}
 
 		public override bool CanRead

@@ -207,7 +207,7 @@ namespace SharpSsh.jsch
 				skip(length);
 
 				// send SSH_FXP_REALPATH
-				sendREALPATH(StringEx.getBytes("."));
+				sendREALPATH(Util.getBytesUTF8("."));
 
 				// receive SSH_FXP_NAME
 				_header = fillHeader(m_buffer, _header);
@@ -217,10 +217,9 @@ namespace SharpSsh.jsch
 				fill(m_buffer.m_buffer, 0, length);
 				i = m_buffer.getInt();              // count
 				str = m_buffer.getString();         // filename
-				m_home = m_cwd = StringEx.getString(str);
+				m_home = m_cwd = Util.getStringUTF8(str);
 				str = m_buffer.getString();         // logname
-													//    SftpATTRS.getATTR(buf);      // attrs
-
+				//    SftpATTRS.getATTR(buf);      // attrs
 				m_lcwd = new File(".").CanonicalPath;
 			}
 			catch (Exception e)
@@ -267,7 +266,7 @@ namespace SharpSsh.jsch
 					throw new SftpException(ChannelSftpResult.SSH_FX_FAILURE, v.ToString());
 
 				path = v[0];
-				sendREALPATH(StringEx.getBytes(path));
+				sendREALPATH(Util.getBytesUTF8(path));
 
 				Header _header = new Header();
 				_header = fillHeader(m_buffer, _header);
@@ -289,12 +288,12 @@ namespace SharpSsh.jsch
 				i = m_buffer.getInt();
 				byte[] str = m_buffer.getString();
 				if (str != null && str[0] != '/')
-					str = StringEx.getBytes(m_cwd + "/" + StringEx.getString(str));
+					str = Util.getBytesUTF8(m_cwd + "/" + Util.getStringUTF8(str));
 
 				str = m_buffer.getString();         // logname
 				i = m_buffer.getInt();              // attrs
 
-				string newpwd = StringEx.getString(str);
+				string newpwd = Util.getStringUTF8(str);
 				SftpATTRS attr = execStat(newpwd);
 				if ((attr.getFlags() & SftpATTRS.SSH_FILEXFER_ATTR_PERMISSIONS) == 0)
 					throw new SftpException(ChannelSftpResult.SSH_FX_FAILURE, "Can't change directory: " + path);
@@ -501,9 +500,9 @@ namespace SharpSsh.jsch
 						throw new SftpException(ChannelSftpResult.SSH_FX_FAILURE, "failed to resume for " + dst);
 				}
 				if (mode == ChannelSftpModes.OVERWRITE)
-					sendOPENW(StringEx.getBytes(dst));
+					sendOPENW(Util.getBytesUTF8(dst));
 				else
-					sendOPENA(StringEx.getBytes(dst));
+					sendOPENA(Util.getBytesUTF8(dst));
 
 				Header _header = new Header();
 				_header = fillHeader(m_buffer, _header);
@@ -628,7 +627,7 @@ namespace SharpSsh.jsch
 		{
 			try
 			{
-				sendSTAT(StringEx.getBytes(path));
+				sendSTAT(Util.getBytesUTF8(path));
 
 				Header _header = fillHeader(m_buffer, new Header());
 				int length = _header.length;
@@ -694,9 +693,9 @@ namespace SharpSsh.jsch
 				}
 
 				if (mode == ChannelSftpModes.OVERWRITE)
-					sendOPENW(StringEx.getBytes(dst));
+					sendOPENW(Util.getBytesUTF8(dst));
 				else
-					sendOPENA(StringEx.getBytes(dst));
+					sendOPENA(Util.getBytesUTF8(dst));
 
 				Header _header = new Header();
 				_header = fillHeader(m_buffer, _header);
@@ -861,7 +860,7 @@ namespace SharpSsh.jsch
 		{
 			try
 			{
-				sendOPENR(StringEx.getBytes(src));
+				sendOPENR(Util.getBytesUTF8(src));
 
 				Header header = fillHeader(m_buffer, new Header());
 				int length = header.length;
@@ -1000,7 +999,7 @@ namespace SharpSsh.jsch
 				if (monitor != null)
 					monitor.Init(SftpProgressMonitor.SfrpOperation.GET, src, "??", attr.getSize());
 
-				sendOPENR(StringEx.getBytes(src));
+				sendOPENR(Util.getBytesUTF8(src));
 
 				Header _header = new Header();
 				_header = fillHeader(m_buffer, _header);
@@ -1042,10 +1041,10 @@ namespace SharpSsh.jsch
 				{
 					int foo = path.LastIndexOf('/');
 					dir = path.Substring(0, ((foo == 0) ? 1 : foo));
-					pattern = StringEx.getBytes(path.Substring(foo + 1));
+					pattern = Util.getBytesUTF8(path.Substring(foo + 1));
 				}
 
-				sendOPENDIR(StringEx.getBytes(dir));
+				sendOPENDIR(Util.getBytesUTF8(dir));
 
 				Header _header = new Header();
 				_header = fillHeader(m_buffer, _header);
@@ -1106,12 +1105,12 @@ namespace SharpSsh.jsch
 						}
 						byte[] filename = m_buffer.getString();
 						str = m_buffer.getString();
-						string longname = StringEx.getString(str);
+						string longname = Util.getStringUTF8(str);
 
 						SftpATTRS attrs = SftpATTRS.getATTR(m_buffer);
 						if (pattern == null || Util.glob(pattern, filename))
 						{
-							v.Add(new LsEntry(StringEx.getString(filename), longname, attrs));
+							v.Add(new LsEntry(Util.getStringUTF8(filename), longname, attrs));
 						}
 
 						count--;
@@ -1138,7 +1137,7 @@ namespace SharpSsh.jsch
 					throw new SftpException(ChannelSftpResult.SSH_FX_FAILURE, v.ToString());
 
 				path = v[0];
-				sendREADLINK(StringEx.getBytes(path));
+				sendREADLINK(Util.getBytesUTF8(path));
 
 				Header _header = new Header();
 				_header = fillHeader(m_buffer, _header);
@@ -1162,7 +1161,7 @@ namespace SharpSsh.jsch
 						longname = m_buffer.getString();
 						SftpATTRS.getATTR(m_buffer);
 					}
-					return StringEx.getString(filename);
+					return Util.getStringUTF8(filename);
 				}
 
 				i = m_buffer.getInt();
@@ -1202,7 +1201,7 @@ namespace SharpSsh.jsch
 
 				newpath = Util.Unquote(newpath);
 
-				sendSYMLINK(StringEx.getBytes(oldpath), StringEx.getBytes(newpath));
+				sendSYMLINK(Util.getBytesUTF8(oldpath), Util.getBytesUTF8(newpath));
 
 				Header _header = new Header();
 				_header = fillHeader(m_buffer, _header);
@@ -1263,7 +1262,7 @@ namespace SharpSsh.jsch
 					newpath = Util.Unquote(newpath);
 				}
 
-				sendRENAME(StringEx.getBytes(oldpath), StringEx.getBytes(newpath));
+				sendRENAME(Util.getBytesUTF8(oldpath), Util.getBytesUTF8(newpath));
 
 				Header _header = new Header();
 				_header = fillHeader(m_buffer, _header);
@@ -1299,7 +1298,7 @@ namespace SharpSsh.jsch
 				for (int j = 0; j < vsize; j++)
 				{
 					path = v[j];
-					sendREMOVE(StringEx.getBytes(path));
+					sendREMOVE(Util.getBytesUTF8(path));
 
 					_header = fillHeader(m_buffer, _header);
 					int length = _header.length;
@@ -1325,7 +1324,7 @@ namespace SharpSsh.jsch
 		{
 			try
 			{
-				sendSTAT(StringEx.getBytes(path));
+				sendSTAT(Util.getBytesUTF8(path));
 
 				Header _header = new Header();
 				_header = fillHeader(m_buffer, _header);
@@ -1459,7 +1458,7 @@ namespace SharpSsh.jsch
 				for (int j = 0; j < vsize; j++)
 				{
 					path = v[j];
-					sendRMDIR(StringEx.getBytes(path));
+					sendRMDIR(Util.getBytesUTF8(path));
 
 					_header = fillHeader(m_buffer, _header);
 					int length = _header.length;
@@ -1491,7 +1490,7 @@ namespace SharpSsh.jsch
 			try
 			{
 				path = remoteAbsolutePath(path);
-				sendMKDIR(StringEx.getBytes(path), null);
+				sendMKDIR(Util.getBytesUTF8(path), null);
 
 				Header header = fillHeader(m_buffer, new Header());
 				int length = header.length;
@@ -1559,7 +1558,7 @@ namespace SharpSsh.jsch
 		{
 			try
 			{
-				sendLSTAT(StringEx.getBytes(path));
+				sendLSTAT(Util.getBytesUTF8(path));
 
 				Header _header = new Header();
 				_header = fillHeader(m_buffer, _header);
@@ -1612,7 +1611,7 @@ namespace SharpSsh.jsch
 		{
 			try
 			{
-				sendSETSTAT(StringEx.getBytes(path), attr);
+				sendSETSTAT(Util.getBytesUTF8(path), attr);
 
 				Header _header = new Header();
 				_header = fillHeader(m_buffer, _header);
@@ -1846,7 +1845,7 @@ namespace SharpSsh.jsch
 		private List<string> glob_remote(string _path)
 		{
 			List<string> v = new List<string>();
-			byte[] path = StringEx.getBytes(_path);
+			byte[] path = Util.getBytesUTF8(_path);
 
 			if (!isPatternEx(_path))
 			{
@@ -1939,7 +1938,7 @@ namespace SharpSsh.jsch
 					SftpATTRS attrs = SftpATTRS.getATTR(m_buffer);
 
 					if (Util.glob(pattern, filename))
-						v.Add(StringEx.getString(dir) + "/" + StringEx.getString(filename));
+						v.Add(Util.getStringUTF8(dir) + "/" + Util.getStringUTF8(filename));
 					count--;
 				}
 			}
@@ -1952,7 +1951,7 @@ namespace SharpSsh.jsch
 		private List<string> glob_local(string _path)
 		{
 			List<string> v = new List<string>();
-			byte[] path = StringEx.getBytes(_path);
+			byte[] path = Util.getBytesUTF8(_path);
 			int i = path.Length - 1;
 			while (i >= 0)
 			{
@@ -1992,10 +1991,10 @@ namespace SharpSsh.jsch
 
 			try
 			{
-				List<string> children = (new File(StringEx.getString(dir))).List();
+				List<string> children = (new File(Util.getStringUTF8(dir))).List();
 				foreach (string entry in children)
-					if (Util.glob(pattern, StringEx.getBytes(entry)))
-						v.Add(StringEx.getString(dir) + m_file_separator + entry);
+					if (Util.glob(pattern, Util.getBytesUTF8(entry)))
+						v.Add(Util.getStringUTF8(dir) + m_file_separator + entry);
 			}
 			catch { }
 			return v;
@@ -2004,7 +2003,7 @@ namespace SharpSsh.jsch
 		private void throwStatusError(Buffer buf, ChannelSftpResult i)
 		{
 			if (m_server_version >= 3)
-				throw new SftpException(i, StringEx.getString(buf.getString()));
+				throw new SftpException(i, Util.getStringUTF8(buf.getString()));
 			else
 				throw new SftpException(i, "Failure");
 		}
@@ -2012,7 +2011,7 @@ namespace SharpSsh.jsch
 		private void throwStatusError(Buffer buf, int i)
 		{
 			if (m_server_version >= 3)
-				throw new SftpException(i, StringEx.getString(buf.getString()));
+				throw new SftpException(i, Util.getStringUTF8(buf.getString()));
 			else
 				throw new SftpException(i, "Failure");
 		}

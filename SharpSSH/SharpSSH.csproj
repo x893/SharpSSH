@@ -190,9 +190,6 @@
     <Compile Include="java\RuntimeException.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="java\StringEx.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="java\util\Arrays.cs">
       <SubType>Code</SubType>
     </Compile>

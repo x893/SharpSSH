@@ -4,7 +4,6 @@ using System.IO;
 using SharpSsh.Streams;
 using System.Runtime.CompilerServices;
 using SharpSsh.java.lang;
-using Str = SharpSsh.java.StringEx;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -18,7 +17,7 @@ namespace SharpSsh.jsch
 		protected int m_id;
 
 		protected int m_recipient = -1;
-		protected byte[] m_type = Str.getBytes("foo");
+		protected byte[] m_type = Util.getBytesUTF8("foo");
 		protected int m_lwsize_max = 0x100000;
 		protected int m_lwsize = 0x100000;   // local initial window size
 		protected int m_lmpsize = 0x4000;    // local maximum packet size

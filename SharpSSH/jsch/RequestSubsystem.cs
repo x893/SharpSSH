@@ -7,9 +7,9 @@ namespace SharpSsh.jsch
 	public class RequestSubsystem : Request
 	{
 		private bool m_want_reply = true;
-		private StringEx m_subsystem = null;
+		private string m_subsystem = null;
 
-		public void request(Session session, Channel channel, StringEx subsystem, bool want_reply)
+		public void request(Session session, Channel channel, string subsystem, bool want_reply)
 		{
 			m_subsystem = subsystem;
 			m_want_reply = want_reply;
@@ -28,9 +28,9 @@ namespace SharpSsh.jsch
 			packet.reset();
 			buf.putByte((byte)Session.SSH_MSG_CHANNEL_REQUEST);
 			buf.putInt(channel.Recipient);
-			buf.putString(new StringEx("subsystem").getBytes());
+			buf.putString("subsystem");
 			buf.putByte((byte)(waitForReply() ? 1 : 0));
-			buf.putString(m_subsystem.getBytes());
+			buf.putString(m_subsystem);
 			session.write(packet);
 
 			if (reply)

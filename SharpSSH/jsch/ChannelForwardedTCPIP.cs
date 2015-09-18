@@ -3,7 +3,6 @@ using System.IO;
 using SharpSsh.java.util;
 using SharpSsh.java.net;
 using SharpSsh.java.lang;
-using Str = SharpSsh.java.StringEx;
 using System.Collections;
 
 namespace SharpSsh.jsch
@@ -234,9 +233,9 @@ namespace SharpSsh.jsch
 			{
 				packet.reset();
 				buf.putByte((byte)80 /*SSH_MSG_GLOBAL_REQUEST*/);
-				buf.putString(Str.getBytes("cancel-tcpip-forward"));
+				buf.putString("cancel-tcpip-forward");
 				buf.putByte((byte)0);
-				buf.putString(Str.getBytes("0.0.0.0"));
+				buf.putString("0.0.0.0");
 				buf.putInt(rport);
 				session.write(packet);
 			}

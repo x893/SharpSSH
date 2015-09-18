@@ -57,7 +57,7 @@ namespace SharpSsh.jsch
 
 		internal static byte[] toBase64(string msg)
 		{
-			return toBase64(StringEx.getBytes(msg));
+			return toBase64(Util.getBytesUTF8(msg));
 		}
 
 		internal static byte[] toBase64(byte[] buf)
