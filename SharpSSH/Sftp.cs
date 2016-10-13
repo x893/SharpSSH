@@ -58,13 +58,16 @@ namespace SharpSsh
 				Get(fromFilePaths[i], toDirPath);
 		}
 
+		/// <summary>
+		/// Get file
+		/// </summary>
+		/// <param name="fromFilePath"></param>
+		/// <param name="toFilePath"></param>
 		public override void Get(string fromFilePath, string toFilePath)
 		{
 			cancelled = false;
 			SftpChannel.get(fromFilePath, toFilePath, m_monitor, ChannelSftp.ChannelSftpModes.OVERWRITE);
 		}
-
-		//Put
 
 		public void Put(string fromFilePath)
 		{

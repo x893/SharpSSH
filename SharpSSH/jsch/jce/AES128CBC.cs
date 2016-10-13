@@ -20,7 +20,7 @@ namespace SharpSsh.jsch.jce
 			m_rijndael = new RijndaelManaged();
 			m_rijndael.Mode = CipherMode.CBC;
 			m_rijndael.Padding = PaddingMode.None;
-			//string pad="NoPadding";      
+
 			byte[] tmp;
 			if (iv.Length > m_ivsize)
 			{
@@ -47,9 +47,18 @@ namespace SharpSsh.jsch.jce
 				m_cipher = null;
 			}
 		}
-		public override void update(byte[] foo, int s1, int len, byte[] bar, int s2)
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="inputBuffer"></param>
+		/// <param name="inputOffset"></param>
+		/// <param name="inputCount"></param>
+		/// <param name="outputBuffer"></param>
+		/// <param name="outputOffset"></param>
+		public override void update(byte[] inputBuffer, int inputOffset, int inputCount, byte[] outputBuffer, int outputOffset)
 		{
-			m_cipher.TransformBlock(foo, s1, len, bar, s2);
+			m_cipher.TransformBlock(inputBuffer, inputOffset, inputCount, outputBuffer, outputOffset);
 		}
 
 		public override string ToString()

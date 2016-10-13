@@ -67,16 +67,23 @@ version                       Show SFTP version
 
 				InputForm inForm = new InputForm();
 				inForm.Text = "Enter username@hostname";
-				inForm.textBox1.Text = "";
-
-				if (!inForm.PromptForInput())
+				string host = null, user;
+				while(true)
 				{
-					Console.WriteLine("Cancelled");
-					return;
+					inForm.SetText("");
+
+					if (!inForm.PromptForInput())
+					{
+						Console.WriteLine("Cancelled");
+						return;
+					}
+					user = inForm.GetText();
+					if (!string.IsNullOrEmpty(user) && user.IndexOf('@') >= 0 && user.IndexOf('@') < user.Length - 1)
+					{
+						host = user.Substring(user.IndexOf('@') + 1);
+						break;
+					}
 				}
-				string host = inForm.textBox1.Text;
-				string user = host;
-				host = host.Substring(host.IndexOf('@') + 1);
 
 				Session session = jsch.getSession(user, host, SharpSsh.SshBase.SSH_TCP_PORT);
 
@@ -428,7 +435,7 @@ version                       Show SFTP version
 				if (!inForm.PromptForInput())
 					return false;
 
-				m_passwd = inForm.getText();
+				m_passwd = inForm.GetText();
 				return true;
 			}
 			public override void showMessage(string message)

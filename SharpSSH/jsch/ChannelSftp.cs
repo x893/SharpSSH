@@ -35,6 +35,13 @@ namespace SharpSsh.jsch
 			SSH_FX_OP_UNSUPPORTED = 8
 		};
 
+		internal class Header
+		{
+			public int Length;
+			public int HeaderType;
+			public int RID;
+		}
+
 		#region Privates
 
 		private static byte SSH_FXP_INIT = 1;
@@ -162,10 +169,7 @@ namespace SharpSsh.jsch
 		public string Home { get { return m_home; } }
 
 
-		public int Seq
-		{
-			get { return m_seq; }
-		}
+		public int Seq { get { return m_seq; } }
 
 		public override void Init()
 		{
@@ -195,36 +199,36 @@ namespace SharpSsh.jsch
 				sendINIT();
 
 				// receive SSH_FXP_VERSION
-				Header _header = new Header();
-				_header = fillHeader(m_buffer, _header);
-				length = _header.length;
+				Header header = new Header();
+				header = fillHeader(m_buffer, header);
+				length = header.Length;
 				if (length > MAX_MSG_LENGTH)
-				{
 					throw new SftpException(ChannelSftpResult.SSH_FX_FAILURE, "Received message is too long: " + length);
-				}
-				type = _header.type;             // 2 -> SSH_FXP_VERSION
-				m_server_version = _header.rid;
+
+				type = header.HeaderType;             // 2 -> SSH_FXP_VERSION
+				m_server_version = header.RID;
 				skip(length);
 
 				// send SSH_FXP_REALPATH
 				sendREALPATH(Util.getBytesUTF8("."));
 
 				// receive SSH_FXP_NAME
-				_header = fillHeader(m_buffer, _header);
-				length = _header.length;
-				type = _header.type;            // 104 -> SSH_FXP_NAME
+				header = fillHeader(m_buffer, header);
+				length = header.Length;
+				type = header.HeaderType;           // 104 -> SSH_FXP_NAME
 				m_buffer.rewind();
 				fill(m_buffer.m_buffer, 0, length);
 				i = m_buffer.getInt();              // count
 				str = m_buffer.getString();         // filename
 				m_home = m_cwd = Util.getStringUTF8(str);
 				str = m_buffer.getString();         // logname
-				//    SftpATTRS.getATTR(buf);      // attrs
+				// SftpATTRS.getATTR(buf);			// attrs
 				m_lcwd = new File(".").CanonicalPath;
 			}
 			catch (Exception e)
 			{
-				if (e is JSchException) throw (JSchException)e;
+				if (e is JSchException)
+					throw (JSchException)e;
 				throw new JSchException(e.ToString());
 			}
 		}
@@ -270,15 +274,14 @@ namespace SharpSsh.jsch
 
 				Header _header = new Header();
 				_header = fillHeader(m_buffer, _header);
-				int length = _header.length;
-				int type = _header.type;
+				int length = _header.Length;
+				int type = _header.HeaderType;
 				m_buffer.rewind();
 				fill(m_buffer.m_buffer, 0, length);
 
 				if (type != 101 && type != 104)
-				{
 					throw new SftpException(ChannelSftpResult.SSH_FX_FAILURE, "");
-				}
+
 				int i;
 				if (type == 101)
 				{
@@ -462,13 +465,11 @@ namespace SharpSsh.jsch
 					throw new SftpException(ChannelSftpResult.SSH_FX_FAILURE, v.ToString());
 				}
 				else
-				{
 					dst = v[0];
-				}
+	
 				if (isRemoteDir(dst))
-				{
 					throw new SftpException(ChannelSftpResult.SSH_FX_FAILURE, dst + " is a directory");
-				}
+				
 				_put(src, dst, monitor, mode);
 			}
 			catch (Exception e)
@@ -504,10 +505,10 @@ namespace SharpSsh.jsch
 				else
 					sendOPENA(Util.getBytesUTF8(dst));
 
-				Header _header = new Header();
-				_header = fillHeader(m_buffer, _header);
-				int length = _header.length;
-				int type = _header.type;
+				Header header = new Header();
+				header = fillHeader(m_buffer, header);
+				int length = header.Length;
+				int type = header.HeaderType;
 				m_buffer.rewind();
 				fill(m_buffer.m_buffer, 0, length);
 
@@ -519,7 +520,7 @@ namespace SharpSsh.jsch
 					int i = m_buffer.getInt();
 					throwStatusError(m_buffer, i);
 				}
-				byte[] handle = m_buffer.getString();         // filename
+				byte[] handle = m_buffer.getString();	// filename
 				byte[] data = null;
 
 				bool dontcopy = true;
@@ -579,24 +580,18 @@ namespace SharpSsh.jsch
 						{
 							while (m_io.m_ins.Available() > 0)
 							{
-								if (checkStatus(m_ackid, _header))
+								if (checkStatus(m_ackid, header))
 								{
 									_ackid = m_ackid[0];
 									if (startid > _ackid || _ackid > m_seq - 1)
 									{
-										if (_ackid == m_seq)
-										{
-											//!!! Console.Error.WriteLine("ack error: startid=" + startid + " seq=" + m_seq + " _ackid=" + _ackid);
-										}
-										else
+										if (_ackid != m_seq)
 											throw new SftpException(ChannelSftpResult.SSH_FX_FAILURE, "ack error: startid=" + startid + " seq=" + m_seq + " _ackid=" + _ackid);
 									}
 									ackcount++;
 								}
 								else
-								{
 									break;
-								}
 							}
 						}
 					}
@@ -609,12 +604,12 @@ namespace SharpSsh.jsch
 				int _ackcount = m_seq - startid;
 				while (_ackcount > ackcount)
 				{
-					if (!checkStatus(null, _header))
+					if (!checkStatus(null, header))
 						break;
 					ackcount++;
 				}
 				if (monitor != null) monitor.End();
-				_sendCLOSE(handle, _header);
+				sendCLOSE(handle, header);
 			}
 			catch (Exception e)
 			{
@@ -629,9 +624,9 @@ namespace SharpSsh.jsch
 			{
 				sendSTAT(Util.getBytesUTF8(path));
 
-				Header _header = fillHeader(m_buffer, new Header());
-				int length = _header.length;
-				int type = _header.type;
+				Header header = fillHeader(m_buffer, new Header());
+				int length = header.Length;
+				int type = header.HeaderType;
 				m_buffer.rewind();
 				fill(m_buffer.m_buffer, 0, length);
 
@@ -673,10 +668,10 @@ namespace SharpSsh.jsch
 			dst = remoteAbsolutePath(dst);
 			try
 			{
-				List<string> v = glob_remote(dst);
-				if (v.Count != 1)
-					throw new SftpException(ChannelSftpResult.SSH_FX_FAILURE, v.ToString());
-				dst = v[0];
+				List<string> list = glob_remote(dst);
+				if (list.Count != 1)
+					throw new SftpException(ChannelSftpResult.SSH_FX_FAILURE, list.ToString());
+				dst = list[0];
 				if (isRemoteDir(dst))
 					throw new SftpException(ChannelSftpResult.SSH_FX_FAILURE, dst + " is a directory");
 
@@ -697,10 +692,10 @@ namespace SharpSsh.jsch
 				else
 					sendOPENA(Util.getBytesUTF8(dst));
 
-				Header _header = new Header();
-				_header = fillHeader(m_buffer, _header);
-				int length = _header.length;
-				int type = _header.type;
+				Header header = new Header();
+				header = fillHeader(m_buffer, header);
+				int length = header.Length;
+				int type = header.HeaderType;
 
 				m_buffer.rewind();
 				fill(m_buffer.m_buffer, 0, length);
@@ -744,6 +739,7 @@ namespace SharpSsh.jsch
 		{
 			src = remoteAbsolutePath(src);
 			dst = localAbsolutePath(dst);
+
 			try
 			{
 				List<string> v = glob_remote(src);
@@ -863,8 +859,8 @@ namespace SharpSsh.jsch
 				sendOPENR(Util.getBytesUTF8(src));
 
 				Header header = fillHeader(m_buffer, new Header());
-				int length = header.length;
-				int type = header.type;
+				int length = header.Length;
+				int type = header.HeaderType;
 
 				m_buffer.rewind();
 
@@ -895,8 +891,8 @@ namespace SharpSsh.jsch
 					sendREAD(handle, offset, request_len);
 
 					header = fillHeader(m_buffer, header);
-					length = header.length;
-					type = header.type;
+					length = header.Length;
+					type = header.HeaderType;
 
 					int i;
 					if (type == SSH_FXP_STATUS)
@@ -959,7 +955,7 @@ namespace SharpSsh.jsch
 				dst.flush();
 
 				if (monitor != null) monitor.End();
-				_sendCLOSE(handle, header);
+				sendCLOSE(handle, header);
 			}
 			catch (Exception e)
 			{
@@ -1003,8 +999,8 @@ namespace SharpSsh.jsch
 
 				Header _header = new Header();
 				_header = fillHeader(m_buffer, _header);
-				int length = _header.length;
-				int type = _header.type;
+				int length = _header.Length;
+				int type = _header.HeaderType;
 				m_buffer.rewind();
 				fill(m_buffer.m_buffer, 0, length);
 
@@ -1048,8 +1044,8 @@ namespace SharpSsh.jsch
 
 				Header _header = new Header();
 				_header = fillHeader(m_buffer, _header);
-				int length = _header.length;
-				int type = _header.type;
+				int length = _header.Length;
+				int type = _header.HeaderType;
 				m_buffer.rewind();
 				fill(m_buffer.m_buffer, 0, length);
 
@@ -1071,8 +1067,8 @@ namespace SharpSsh.jsch
 					sendREADDIR(handle);
 
 					_header = fillHeader(m_buffer, _header);
-					length = _header.length;
-					type = _header.type;
+					length = _header.Length;
+					type = _header.HeaderType;
 					if (type != SSH_FXP_STATUS && type != SSH_FXP_NAME)
 						throw new SftpException(ChannelSftpResult.SSH_FX_FAILURE, "");
 
@@ -1116,7 +1112,7 @@ namespace SharpSsh.jsch
 						count--;
 					}
 				}
-				_sendCLOSE(handle, _header);
+				sendCLOSE(handle, _header);
 				return v;
 			}
 			catch (Exception e)
@@ -1141,8 +1137,8 @@ namespace SharpSsh.jsch
 
 				Header _header = new Header();
 				_header = fillHeader(m_buffer, _header);
-				int length = _header.length;
-				int type = _header.type;
+				int length = _header.Length;
+				int type = _header.HeaderType;
 				m_buffer.rewind();
 				fill(m_buffer.m_buffer, 0, length);
 
@@ -1205,8 +1201,8 @@ namespace SharpSsh.jsch
 
 				Header _header = new Header();
 				_header = fillHeader(m_buffer, _header);
-				int length = _header.length;
-				int type = _header.type;
+				int length = _header.Length;
+				int type = _header.HeaderType;
 				m_buffer.rewind();
 				fill(m_buffer.m_buffer, 0, length);
 
@@ -1266,8 +1262,8 @@ namespace SharpSsh.jsch
 
 				Header _header = new Header();
 				_header = fillHeader(m_buffer, _header);
-				int length = _header.length;
-				int type = _header.type;
+				int length = _header.Length;
+				int type = _header.HeaderType;
 				m_buffer.rewind();
 				fill(m_buffer.m_buffer, 0, length);
 
@@ -1301,8 +1297,8 @@ namespace SharpSsh.jsch
 					sendREMOVE(Util.getBytesUTF8(path));
 
 					_header = fillHeader(m_buffer, _header);
-					int length = _header.length;
-					int type = _header.type;
+					int length = _header.Length;
+					int type = _header.HeaderType;
 					m_buffer.rewind();
 					fill(m_buffer.m_buffer, 0, length);
 
@@ -1328,8 +1324,8 @@ namespace SharpSsh.jsch
 
 				Header _header = new Header();
 				_header = fillHeader(m_buffer, _header);
-				int length = _header.length;
-				int type = _header.type;
+				int length = _header.Length;
+				int type = _header.HeaderType;
 				m_buffer.rewind();
 				fill(m_buffer.m_buffer, 0, length);
 
@@ -1461,8 +1457,8 @@ namespace SharpSsh.jsch
 					sendRMDIR(Util.getBytesUTF8(path));
 
 					_header = fillHeader(m_buffer, _header);
-					int length = _header.length;
-					int type = _header.type;
+					int length = _header.Length;
+					int type = _header.HeaderType;
 					m_buffer.rewind();
 					fill(m_buffer.m_buffer, 0, length);
 
@@ -1493,8 +1489,8 @@ namespace SharpSsh.jsch
 				sendMKDIR(Util.getBytesUTF8(path), null);
 
 				Header header = fillHeader(m_buffer, new Header());
-				int length = header.length;
-				int type = header.type;
+				int length = header.Length;
+				int type = header.HeaderType;
 				m_buffer.rewind();
 				fill(m_buffer.m_buffer, 0, length);
 
@@ -1562,8 +1558,8 @@ namespace SharpSsh.jsch
 
 				Header _header = new Header();
 				_header = fillHeader(m_buffer, _header);
-				int length = _header.length;
-				int type = _header.type;
+				int length = _header.Length;
+				int type = _header.HeaderType;
 				m_buffer.rewind();
 				fill(m_buffer.m_buffer, 0, length);
 
@@ -1615,8 +1611,8 @@ namespace SharpSsh.jsch
 
 				Header _header = new Header();
 				_header = fillHeader(m_buffer, _header);
-				int length = _header.length;
-				int type = _header.type;
+				int length = _header.Length;
+				int type = _header.HeaderType;
 				m_buffer.rewind();
 				fill(m_buffer.m_buffer, 0, length);
 
@@ -1650,13 +1646,13 @@ namespace SharpSsh.jsch
 				l -= i;
 			}
 		}
-		internal bool checkStatus(int[] ackid, Header _header)
+		internal bool checkStatus(int[] ackID, Header header)
 		{
-			_header = fillHeader(m_buffer, _header);
-			int length = _header.length;
-			int type = _header.type;
-			if (ackid != null)
-				ackid[0] = _header.rid;
+			header = fillHeader(m_buffer, header);
+			int length = header.Length;
+			int type = header.HeaderType;
+			if (ackID != null)
+				ackID[0] = header.RID;
 			m_buffer.rewind();
 			fill(m_buffer.m_buffer, 0, length);
 
@@ -1670,8 +1666,7 @@ namespace SharpSsh.jsch
 			return true;
 		}
 
-		internal bool _sendCLOSE(byte[] handle, Header header)
-		//throws Exception
+		internal bool sendCLOSE(byte[] handle, Header header)
 		{
 			sendCLOSE(handle);
 			return checkStatus(null, header);
@@ -1681,7 +1676,7 @@ namespace SharpSsh.jsch
 		{
 			m_packet.reset();
 			putHEAD(SSH_FXP_INIT, 5);
-			m_buffer.putInt(3);                // version 3
+			m_buffer.putInt(3); // version 3
 			m_session.write(m_packet, this, 5 + 4);
 		}
 
@@ -1842,28 +1837,28 @@ namespace SharpSsh.jsch
 			m_buffer.putByte(type);
 		}
 
-		private List<string> glob_remote(string _path)
+		private List<string> glob_remote(string path)
 		{
-			List<string> v = new List<string>();
-			byte[] path = Util.getBytesUTF8(_path);
+			List<string> list = new List<string>();
+			byte[] pathBytes = Util.getBytesUTF8(path);
 
-			if (!isPatternEx(_path))
+			if (!isPatternEx(path))
 			{
-				v.Add(Util.Unquote(_path));
-				return v;
+				list.Add(Util.Unquote(path));
+				return list;
 			}
 
-			int i = path.Length - 1;
+			int i = pathBytes.Length - 1;
 			while (i >= 0)
 			{
-				if (path[i] == '/')
+				if (pathBytes[i] == '/')
 					break;
 				i--;
 			}
 			if (i < 0)
 			{
-				v.Add(Util.Unquote(_path));
-				return v;
+				list.Add(Util.Unquote(path));
+				return list;
 			}
 
 			byte[] dir;
@@ -1872,18 +1867,18 @@ namespace SharpSsh.jsch
 			else
 			{
 				dir = new byte[i];
-				Array.Copy(path, 0, dir, 0, i);
+				Array.Copy(pathBytes, 0, dir, 0, i);
 			}
 
-			byte[] pattern = new byte[path.Length - i - 1];
-			Array.Copy(path, i + 1, pattern, 0, pattern.Length);
+			byte[] pattern = new byte[pathBytes.Length - i - 1];
+			Array.Copy(pathBytes, i + 1, pattern, 0, pattern.Length);
 
 			sendOPENDIR(dir);
 
-			Header _header = new Header();
-			_header = fillHeader(m_buffer, _header);
-			int length = _header.length;
-			int type = _header.type;
+			Header header = new Header();
+			header = fillHeader(m_buffer, header);
+			int length = header.Length;
+			int type = header.HeaderType;
 			m_buffer.rewind();
 			fill(m_buffer.m_buffer, 0, length);
 
@@ -1900,9 +1895,9 @@ namespace SharpSsh.jsch
 			while (true)
 			{
 				sendREADDIR(handle);
-				_header = fillHeader(m_buffer, _header);
-				length = _header.length;
-				type = _header.type;
+				header = fillHeader(m_buffer, header);
+				length = header.Length;
+				type = header.HeaderType;
 
 				if (type != SSH_FXP_STATUS && type != SSH_FXP_NAME)
 					throw new SftpException(ChannelSftpResult.SSH_FX_FAILURE, "");
@@ -1938,42 +1933,42 @@ namespace SharpSsh.jsch
 					SftpATTRS attrs = SftpATTRS.getATTR(m_buffer);
 
 					if (Util.glob(pattern, filename))
-						v.Add(Util.getStringUTF8(dir) + "/" + Util.getStringUTF8(filename));
+						list.Add(Util.getStringUTF8(dir) + "/" + Util.getStringUTF8(filename));
 					count--;
 				}
 			}
-			if (_sendCLOSE(handle, _header))
-				return v;
+			if (sendCLOSE(handle, header))
+				return list;
 
 			return null;
 		}
 
-		private List<string> glob_local(string _path)
+		private List<string> glob_local(string path)
 		{
-			List<string> v = new List<string>();
-			byte[] path = Util.getBytesUTF8(_path);
-			int i = path.Length - 1;
+			List<string> list = new List<string>();
+			byte[] pathBytes = Util.getBytesUTF8(path);
+			int i = pathBytes.Length - 1;
 			while (i >= 0)
 			{
-				if (path[i] == '*' || path[i] == '?')
+				if (pathBytes[i] == '*' || pathBytes[i] == '?')
 					break;
 				i--;
 			}
 			if (i < 0)
 			{
-				v.Add(_path);
-				return v;
+				list.Add(path);
+				return list;
 			}
 			while (i >= 0)
 			{
-				if (path[i] == m_file_separator_char)
+				if (pathBytes[i] == m_file_separator_char)
 					break;
 				i--;
 			}
 			if (i < 0)
 			{
-				v.Add(_path);
-				return v;
+				list.Add(path);
+				return list;
 			}
 
 			byte[] dir;
@@ -1984,20 +1979,20 @@ namespace SharpSsh.jsch
 			else
 			{
 				dir = new byte[i];
-				Array.Copy(path, 0, dir, 0, i);
+				Array.Copy(pathBytes, 0, dir, 0, i);
 			}
-			byte[] pattern = new byte[path.Length - i - 1];
-			Array.Copy(path, i + 1, pattern, 0, pattern.Length);
+			byte[] pattern = new byte[pathBytes.Length - i - 1];
+			Array.Copy(pathBytes, i + 1, pattern, 0, pattern.Length);
 
 			try
 			{
 				List<string> children = (new File(Util.getStringUTF8(dir))).List();
 				foreach (string entry in children)
 					if (Util.glob(pattern, Util.getBytesUTF8(entry)))
-						v.Add(Util.getStringUTF8(dir) + m_file_separator + entry);
+						list.Add(Util.getStringUTF8(dir) + m_file_separator + entry);
 			}
 			catch { }
-			return v;
+			return list;
 		}
 
 		private void throwStatusError(Buffer buf, ChannelSftpResult i)
@@ -2095,20 +2090,13 @@ namespace SharpSsh.jsch
 			}
 		}
 
-		internal class Header
-		{
-			public int length;
-			public int type;
-			public int rid;
-		}
-
 		private Header fillHeader(Buffer buf, Header header)
 		{
 			buf.rewind();
 			int i = fill(buf.m_buffer, 0, 9);
-			header.length = buf.getInt() - 5;
-			header.type = buf.getByte() & 0xFF;
-			header.rid = buf.getInt();
+			header.Length = buf.getInt() - 5;
+			header.HeaderType = buf.getByte() & 0xFF;
+			header.RID = buf.getInt();
 			return header;
 		}
 
@@ -2123,8 +2111,10 @@ namespace SharpSsh.jsch
 
 		private string localAbsolutePath(string path)
 		{
-			if (isLocalAbsolutePath(path)) return path;
-			if (m_lcwd.EndsWith(m_file_separator)) return m_lcwd + path;
+			if (isLocalAbsolutePath(path))
+				return path;
+			if (m_lcwd.EndsWith(m_file_separator))
+				return m_lcwd + path;
 			return m_lcwd + m_file_separator + path;
 		}
 
@@ -2253,9 +2243,9 @@ namespace SharpSsh.jsch
 				}
 
 				m_header = m_sftp.fillHeader(m_sftp.m_buffer, m_header);
-				m_rest_length = m_header.length;
-				int type = m_header.type;
-				int id = m_header.rid;
+				m_rest_length = m_header.Length;
+				int type = m_header.HeaderType;
+				int id = m_header.RID;
 
 				if (type != SSH_FXP_STATUS && type != SSH_FXP_DATA)
 				{
@@ -2332,7 +2322,7 @@ namespace SharpSsh.jsch
 					m_monitor.End();
 				try
 				{
-					m_sftp._sendCLOSE(m_handle, m_header);
+					m_sftp.sendCLOSE(m_handle, m_header);
 				}
 				catch (Exception e)
 				{

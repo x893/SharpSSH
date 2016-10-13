@@ -9,12 +9,16 @@ namespace SharpSsh.java.util
 	{
 		internal static bool Equals(byte[] array1, byte[] array2)
 		{
-			int len1 = array1.Length;
+			if (array1 == null)
+				return (array2 == null);
+			if (array2 == null)
+				return (array1 == null);
 
-			if (len1 != array2.Length)
+			int length = array1.Length;
+			if (length != array2.Length)
 				return false;
 
-			for (int idx = 0; idx < len1; idx++)
+			for (int idx = 0; idx < length; idx++)
 			{
 				if (array1[idx] != array2[idx])
 					return false;

@@ -31,59 +31,63 @@ namespace SharpSshTest
 			SHARP_EXEC,
 			SHARP_TRANSFER,
 			SHARP_DOWNLOAD,
+			BAD,
 			EXIT,
 			UNKNOWN
 		};
 
 		public static void Main()
 		{
-			while (true)
+			COMMANDS cmd = COMMANDS.UNKNOWN;
+			while (cmd != COMMANDS.EXIT)
 			{
-				PrintVersoin();
+				if (cmd != COMMANDS.BAD)
+				{
+					PrintVersoin();
 
-				Console.WriteLine();
-				Console.WriteLine("JSch Smaples:");
-				Console.WriteLine("=============");
-				Console.WriteLine("{0})\tShell.cs", COMMANDS.JSCH_SHELL);
-				Console.WriteLine("{0})\tAES.cs", COMMANDS.JSCH_AES);
-				Console.WriteLine("{0})\tUserAuthPublicKey.cs", COMMANDS.JSCH_PUBKEY);
-				Console.WriteLine("{0})\tSftp.cs", COMMANDS.JSCH_SFTP);
-				Console.WriteLine("{0})\tKeyGen.cs", COMMANDS.JSCH_KEYEGEN);
-				Console.WriteLine("{0})\tKnownHosts.cs", COMMANDS.JSCH_KNOWN_HOSTS);
-				Console.WriteLine("{0})\tChangePassphrase.cs", COMMANDS.JSCH_CHANGE_PASS);
-				Console.WriteLine("{0})\tPortForwardingL.cs", COMMANDS.JSCH_PORT_FWD_L);
-				Console.WriteLine("{0})\tPortForwardingR.cs", COMMANDS.JSCH_PORT_FWD_R);
-				Console.WriteLine("{0})\tStreamForwarding.cs", COMMANDS.JSCH_STREAM_FWD);
-				Console.WriteLine("{0})\tSubsystem.cs", COMMANDS.JSCH_STREAM_SUBSYSTEM);
-				Console.WriteLine("{0})\tViaHTTP.cs", COMMANDS.JSCH_VIA_HTTP);
-				Console.WriteLine();
-				Console.WriteLine("SharpSSH Smaples:");
-				Console.WriteLine("=================");
-				Console.WriteLine("{0})\tSSH Shell sample", COMMANDS.SHARP_SHELL);
-				Console.WriteLine("{0})\tSSH Expect Sample", COMMANDS.SHARP_EXPECT);
-				Console.WriteLine("{0})\tSSH Exec Sample", COMMANDS.SHARP_EXEC);
-				Console.WriteLine("{0})\tSSH File Transfer", COMMANDS.SHARP_TRANSFER);
-				Console.WriteLine("{0})\tSSH File Download", COMMANDS.SHARP_DOWNLOAD);
-				Console.WriteLine("{0})\tExit", COMMANDS.EXIT);
-				Console.WriteLine();
+					Console.WriteLine();
+					Console.WriteLine("JSch Smaples:");
+					Console.WriteLine("=============");
+					Console.WriteLine("{0})\tShell.cs", COMMANDS.JSCH_SHELL);
+					Console.WriteLine("{0})\tAES.cs", COMMANDS.JSCH_AES);
+					Console.WriteLine("{0})\tUserAuthPublicKey.cs", COMMANDS.JSCH_PUBKEY);
+					Console.WriteLine("{0})\tSftp.cs", COMMANDS.JSCH_SFTP);
+					Console.WriteLine("{0})\tKeyGen.cs", COMMANDS.JSCH_KEYEGEN);
+					Console.WriteLine("{0})\tKnownHosts.cs", COMMANDS.JSCH_KNOWN_HOSTS);
+					Console.WriteLine("{0})\tChangePassphrase.cs", COMMANDS.JSCH_CHANGE_PASS);
+					Console.WriteLine("{0})\tPortForwardingL.cs", COMMANDS.JSCH_PORT_FWD_L);
+					Console.WriteLine("{0})\tPortForwardingR.cs", COMMANDS.JSCH_PORT_FWD_R);
+					Console.WriteLine("{0})\tStreamForwarding.cs", COMMANDS.JSCH_STREAM_FWD);
+					Console.WriteLine("{0})\tSubsystem.cs", COMMANDS.JSCH_STREAM_SUBSYSTEM);
+					Console.WriteLine("{0})\tViaHTTP.cs", COMMANDS.JSCH_VIA_HTTP);
+					Console.WriteLine();
+					Console.WriteLine("SharpSSH Smaples:");
+					Console.WriteLine("=================");
+					Console.WriteLine("{0})\tSSH Shell sample", COMMANDS.SHARP_SHELL);
+					Console.WriteLine("{0})\tSSH Expect Sample", COMMANDS.SHARP_EXPECT);
+					Console.WriteLine("{0})\tSSH Exec Sample", COMMANDS.SHARP_EXEC);
+					Console.WriteLine("{0})\tSSH File Transfer", COMMANDS.SHARP_TRANSFER);
+					Console.WriteLine("{0})\tSSH File Download", COMMANDS.SHARP_DOWNLOAD);
+					Console.WriteLine("{0})\tExit", COMMANDS.EXIT);
+					Console.WriteLine();
+				}
 
-			INPUT:
-				COMMANDS i = COMMANDS.UNKNOWN;
+				cmd = COMMANDS.UNKNOWN;
 				Console.Write("Please enter your choice: ");
 				try
 				{
 					string input = Console.ReadLine();
 					if (input == "")
-						return;
-					i = (COMMANDS)Enum.Parse(typeof(COMMANDS), input);
+						break;
+					cmd = (COMMANDS)Enum.Parse(typeof(COMMANDS), input);
 					Console.WriteLine();
 				}
 				catch
 				{
-					i = COMMANDS.UNKNOWN;
+					cmd = COMMANDS.UNKNOWN;
 				}
 
-				switch (i)
+				switch (cmd)
 				{
 					// JSch samples:
 					case COMMANDS.JSCH_SHELL:
@@ -99,7 +103,12 @@ namespace SharpSshTest
 						jsch_samples.Sftp.RunExample(null);
 						break;
 					case COMMANDS.JSCH_KEYEGEN:
-						jsch_samples.KeyGen.RunExample(GetArgs(new string[] { "Sig Type [rsa|dsa]", "output_keyfile", "comment" }));
+						jsch_samples.KeyGen.RunExample(
+							GetArgs(new string[] {
+								"Sig Type [rsa|dsa]",
+								"output_keyfile",
+								"comment"
+							}));
 						break;
 					case COMMANDS.JSCH_KNOWN_HOSTS:
 						jsch_samples.KnownHosts.RunExample(null);
@@ -140,10 +149,11 @@ namespace SharpSshTest
 						sharpssh_samples.SshFileTransferTest.RunExampleDownload();
 						break;
 					case COMMANDS.EXIT:
-						return;
+						break;
 					default:
 						Console.Write("Bad input, ");
-						goto INPUT;
+						cmd = COMMANDS.BAD;
+						break;
 				}
 			}
 		}

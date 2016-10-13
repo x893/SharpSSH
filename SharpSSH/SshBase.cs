@@ -85,9 +85,9 @@ namespace SharpSsh
             ConnectChannel();
         }
 
-        protected virtual void ConnectSession(int tcpPort)
+        protected virtual void ConnectSession(int port)
         {
-            m_session = m_jsch.getSession(m_user, m_host, tcpPort);
+            m_session = m_jsch.getSession(m_user, m_host, port);
             if (Password != null)
                 m_session.setUserInfo(new KeyboardInteractiveUserInfo(Password));
             StringDictionary config = new StringDictionary();

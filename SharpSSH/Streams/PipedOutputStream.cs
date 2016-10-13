@@ -31,17 +31,15 @@ namespace SharpSsh.Streams
 		/* REMIND: identification of the read and write sides needs to be
 			more sophisticated.  Either using thread groups (but what about
 			pipes within a thread?) or using finalization (but it may be a
-			long time until the next GC). */
+			long time until the next GC).
+		 */
 		private PipedInputStream m_stream;
 
-		/**
-		* Creates a piped output stream connected to the specified piped 
-		* input stream. Data bytes written to this stream will then be 
-		* available as input from <code>snk</code>.
-		*
-		* @param      snk   The piped input stream to connect to.
-		* @exception  IOException  if an I/O error occurs.
-		*/
+		/// <summary>
+		/// Creates a piped output stream connected to the specified piped input stream.
+		/// Data bytes written to this stream will then be available as input from <code>snk</code>.
+		/// </summary>
+		/// <param name="stream">The piped input stream to connect to</param>
 		public PipedOutputStream(PipedInputStream stream)
 		{
 			connect(stream);

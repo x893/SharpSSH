@@ -157,7 +157,7 @@ namespace SharpSshTest.jsch_samples
 				if (!passwordField.PromptForInput())
 					return false;
 
-				m_passwd = passwordField.getText();
+				m_passwd = passwordField.GetText();
 				return true;
 			}
 			public override void showMessage(string message)

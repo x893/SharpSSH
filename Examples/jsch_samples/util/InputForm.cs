@@ -10,9 +10,9 @@ namespace SharpSshTest.jsch_samples
 	public class InputForm : System.Windows.Forms.Form
 	{
 		private static InputForm inForm;
-		bool okBtnClicked = false;
+		bool btnOKClicked = false;
 
-		public System.Windows.Forms.TextBox textBox1;
+		private System.Windows.Forms.TextBox textBox;
 		private System.Windows.Forms.Button btnOK;
 		private System.Windows.Forms.Button btnCancel;
 
@@ -50,10 +50,11 @@ namespace SharpSshTest.jsch_samples
 		public static string GetUserInput(string title, string devaultValue, bool password)
 		{
 			Instance.Text = title;
-			Instance.textBox1.Text = devaultValue;
+			Instance.textBox.Text = devaultValue;
 			Instance.PasswordField = password;
+
 			if (Instance.PromptForInput())
-				return Instance.textBox1.Text;
+				return Instance.textBox.Text;
 			else
 				throw new Exception("Canceled by user");
 		}
@@ -99,23 +100,23 @@ namespace SharpSshTest.jsch_samples
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.textBox1 = new System.Windows.Forms.TextBox();
+			this.textBox = new System.Windows.Forms.TextBox();
 			this.btnOK = new System.Windows.Forms.Button();
 			this.btnCancel = new System.Windows.Forms.Button();
 			this.SuspendLayout();
 			// 
-			// textBox1
+			// textBox
 			// 
-			this.textBox1.Location = new System.Drawing.Point(56, 24);
-			this.textBox1.Name = "textBox1";
-			this.textBox1.Size = new System.Drawing.Size(160, 20);
-			this.textBox1.TabIndex = 0;
-			this.textBox1.Text = "";
+			this.textBox.Location = new System.Drawing.Point(67, 28);
+			this.textBox.Name = "textBox";
+			this.textBox.Size = new System.Drawing.Size(192, 22);
+			this.textBox.TabIndex = 0;
 			// 
 			// btnOK
 			// 
-			this.btnOK.Location = new System.Drawing.Point(56, 64);
+			this.btnOK.Location = new System.Drawing.Point(67, 74);
 			this.btnOK.Name = "btnOK";
+			this.btnOK.Size = new System.Drawing.Size(90, 26);
 			this.btnOK.TabIndex = 1;
 			this.btnOK.Text = "OK";
 			this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
@@ -123,8 +124,9 @@ namespace SharpSshTest.jsch_samples
 			// btnCancel
 			// 
 			this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-			this.btnCancel.Location = new System.Drawing.Point(144, 64);
+			this.btnCancel.Location = new System.Drawing.Point(173, 74);
 			this.btnCancel.Name = "btnCancel";
+			this.btnCancel.Size = new System.Drawing.Size(90, 26);
 			this.btnCancel.TabIndex = 2;
 			this.btnCancel.Text = "Cancel";
 			this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
@@ -132,56 +134,62 @@ namespace SharpSshTest.jsch_samples
 			// InputForm
 			// 
 			this.AcceptButton = this.btnOK;
-			this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
+			this.AutoScaleBaseSize = new System.Drawing.Size(6, 15);
 			this.CancelButton = this.btnCancel;
 			this.ClientSize = new System.Drawing.Size(264, 110);
 			this.Controls.Add(this.btnCancel);
 			this.Controls.Add(this.btnOK);
-			this.Controls.Add(this.textBox1);
+			this.Controls.Add(this.textBox);
 			this.Name = "InputForm";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-			this.Text = "Form1";
+			this.Text = "InputForm";
 			this.ResumeLayout(false);
+			this.PerformLayout();
 
 		}
 		#endregion
 
 		private void btnOK_Click(object sender, System.EventArgs e)
 		{
-			okBtnClicked = true;
+			btnOKClicked = true;
 			Hide();
 		}
 
 		private void btnCancel_Click(object sender, System.EventArgs e)
 		{
-			okBtnClicked = false;
-			textBox1.Text = "";
+			btnOKClicked = false;
+			textBox.Text = "";
 			Hide();
 		}
 
 		public bool PromptForInput()
 		{
 			ShowDialog();
-			return okBtnClicked;
+			return btnOKClicked;
 		}
 
-		public string getText()
+		public string GetText()
 		{
-			return textBox1.Text;
+			return textBox.Text;
+		}
+
+		public void SetText(string text)
+		{
+			textBox.Text = text;
 		}
 
 		public bool PasswordField
 		{
 			get
 			{
-				return (textBox1.PasswordChar.Equals(0));
+				return (textBox.PasswordChar.Equals(0));
 			}
 			set
 			{
 				if (value)
-					textBox1.PasswordChar = '*';
+					textBox.PasswordChar = '*';
 				else
-					textBox1.PasswordChar = (char)0;
+					textBox.PasswordChar = '\0';
 			}
 		}
 	}

@@ -77,53 +77,48 @@ namespace SharpSsh.jsch
 
 		public Session getSession(string username, string host, int port)
 		{
-			Session s = new Session(this);
-			s.setUserName(username);
-			s.setHost(host);
-			s.setPort(port);
-			m_pool.Add(s);
-			return s;
+			Session session = new Session(this);
+			session.setUserName(username);
+			session.setHost(host);
+			session.setPort(port);
+			m_pool.Add(session);
+			return session;
 		}
 
 		internal bool removeSession(Session session)
 		{
 			lock (m_pool)
-			{	//!!!
+			{
 				m_pool.Remove(session);
 				return true;
 			}
 		}
 
-		public void setHostKeyRepository(HostKeyRepository foo)
+		public void setHostKeyRepository(HostKeyRepository knownHosts)
 		{
-			m_known_hosts = foo;
+			m_known_hosts = knownHosts;
 		}
-		public void setKnownHosts(string foo)
+		public void setKnownHosts(string knownHosts)
 		{
-			if (m_known_hosts == null) m_known_hosts = new KnownHosts(this);
+			if (m_known_hosts == null)
+				m_known_hosts = new KnownHosts(this);
 			if (m_known_hosts is KnownHosts)
-			{
 				lock (m_known_hosts)
-				{
-					((KnownHosts)m_known_hosts).setKnownHosts(foo);
-				}
-			}
+					((KnownHosts)m_known_hosts).setKnownHosts(knownHosts);
 		}
-		public void setKnownHosts(StreamReader foo)
+		public void setKnownHosts(StreamReader knownHosts)
 		{
-			if (m_known_hosts == null) m_known_hosts = new KnownHosts(this);
+			if (m_known_hosts == null)
+				m_known_hosts = new KnownHosts(this);
 			if (m_known_hosts is KnownHosts)
-			{
 				lock (m_known_hosts)
-				{
-					((KnownHosts)m_known_hosts).setKnownHosts(foo);
-				}
-			}
+					((KnownHosts)m_known_hosts).setKnownHosts(knownHosts);
 		}
 
 		public HostKeyRepository getHostKeyRepository()
 		{
-			if (m_known_hosts == null) m_known_hosts = new KnownHosts(this);
+			if (m_known_hosts == null)
+				m_known_hosts = new KnownHosts(this);
 			return m_known_hosts;
 		}
 
@@ -170,11 +165,11 @@ namespace SharpSsh.jsch
 		{
 			if (m_proxies == null)
 				return null;
-			byte[] _host = System.Text.Encoding.Default.GetBytes(host);
+			byte[] hostBytes = System.Text.Encoding.Default.GetBytes(host);
 			lock (m_proxies)
 			{
 				for (int i = 0; i < m_proxies.Count; i += 2)
-					if (Util.glob(((byte[])m_proxies[i]), _host))
+					if (Util.glob(((byte[])m_proxies[i]), hostBytes))
 						return (IProxy)(m_proxies[i + 1]);
 			}
 			return null;
@@ -185,15 +180,15 @@ namespace SharpSsh.jsch
 			m_proxies = null;
 		}
 
-		public static void setConfig(System.Collections.Hashtable foo)
+		public static void setConfig(System.Collections.Hashtable config)
 		{
 			lock (m_config)
 			{
-				System.Collections.IEnumerator e = foo.Keys.GetEnumerator();
+				System.Collections.IEnumerator e = config.Keys.GetEnumerator();
 				while (e.MoveNext())
 				{
 					string key = (string)(e.Current);
-					m_config.Add(key, (string)(foo[key]));
+					m_config.Add(key, (string)(config[key]));
 				}
 			}
 		}

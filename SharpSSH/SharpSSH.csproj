@@ -298,9 +298,6 @@
     <Compile Include="jsch\jce\MD5.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\jce\Random.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="jsch\jce\SHA1.cs">
       <SubType>Code</SubType>
     </Compile>

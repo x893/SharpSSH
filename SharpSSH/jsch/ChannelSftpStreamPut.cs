@@ -17,12 +17,12 @@ namespace SharpSsh.jsch
 		private int m_ackcount = 0;
 		private ChannelSftp.Header header = new ChannelSftp.Header();
 
-		internal OutputStreamPut(ChannelSftp sftp, byte[] handle, long[] _offset, SftpProgressMonitor monitor)
+		internal OutputStreamPut(ChannelSftp sftp, byte[] handle, long[] offset, SftpProgressMonitor monitor)
 			: base()
 		{
 			m_sftp = sftp;
 			m_handle = handle;
-			m_offset = _offset;
+			m_offset = offset;
 			m_monitor = monitor;
 		}
 
@@ -82,8 +82,8 @@ namespace SharpSsh.jsch
 			{
 				try
 				{
-					int _ackcount = m_sftp.Seq - m_startid;
-					while (_ackcount > m_ackcount)
+					int ackCount = m_sftp.Seq - m_startid;
+					while (ackCount > m_ackcount)
 					{
 						if (!m_sftp.checkStatus(null, header))
 							break;
@@ -100,7 +100,7 @@ namespace SharpSsh.jsch
 				m_monitor.End();
 			try
 			{
-				m_sftp._sendCLOSE(m_handle, header);
+				m_sftp.sendCLOSE(m_handle, header);
 			}
 			catch (IOException e)
 			{
